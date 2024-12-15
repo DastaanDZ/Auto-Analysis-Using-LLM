@@ -9,6 +9,7 @@ import requests
 import re
 import base64
 import shutil
+import random
 
 CACHE_FILE = "api_cache.json"
 
@@ -103,25 +104,27 @@ def load_data(filename):
             continue
     raise RuntimeError(f"Error loading {filename}: Unable to decode file with tried encodings.")
 
-def rename_files_with_suffix(filename):
+def rename_files_with_random_suffix():
     """
-    Renames all .png and .md files in the current directory to append '_filename' before the extension.
+    Renames all .png and .md files in the current directory to append a random 5-digit integer before the extension.
+    """
+    # Generate a random 5-digit integer
+    random_suffix = random.randint(10000, 99999)
 
-    Args:
-        filename (str): The suffix to append to file names.
-    """
     # List all files in the current directory
     for file in os.listdir("."):
         if file.endswith(".png"):
             # Rename .png file
-            new_name = f"{os.path.splitext(file)[0]}_{filename}.png"
+            new_name = f"{os.path.splitext(file)[0]}_{random_suffix}.png"
             os.rename(file, new_name)
             print(f"Renamed: {file} -> {new_name}")
         elif file.endswith(".md"):
             # Rename .md file
-            new_name = f"{os.path.splitext(file)[0]}_{filename}.md"
+            new_name = f"{os.path.splitext(file)[0]}_{random_suffix}.md"
             os.rename(file, new_name)
             print(f"Renamed: {file} -> {new_name}")
+    
+    return random_suffix
 
 
 def basic_analysis(df):
@@ -160,6 +163,36 @@ def sanitize_content(response):
     print("Sanitized content:\n", response)
 
     return response
+
+    import os
+
+def add_images_to_md(filename):
+    # Directory where the images are located (assuming they are in the same directory as the script)
+    images_dir = './'
+
+    # Pattern to match *_{filename}.png images
+    image_pattern = f"*_{filename}.png"
+
+    # Find all images that match the pattern
+    images_to_add = [img for img in os.listdir(images_dir) if img.endswith(f"_{filename}.png")]
+    
+    if not images_to_add:
+        print(f"No images found matching pattern {image_pattern}.")
+        return
+
+    # Load the existing Markdown file or create a new one
+    md_filename = f"README_{filename}.md"
+    
+    # Check if the Markdown file already exists
+    if os.path.exists(md_filename):
+        with open(md_filename, "a") as md_file:  # Open the file in append mode
+            # Add images to the file
+            for image in images_to_add:
+                md_file.write(f"![{image}]({image})\n\n")
+        print(f"Images successfully added to {md_filename}.")
+    else:
+        print(f"The file {md_filename} does not exist. Please create it first.")
+
 
 def ask_llm_for_columns_and_visualizations(df,filename):
     """Ask the LLM to recommend relevant columns and visualizations."""
@@ -329,7 +362,8 @@ def main():
     generate_visualizations(df, args.filename)
     markdown = narrate_story(summary, insights, args.filename)
     save_outputs(markdown)
-    rename_files_with_suffix(args.filename[:-4])
+    random_suffix = rename_files_with_random_suffix()
+    add_images_to_md(random_suffix)
 
 if __name__ == "__main__":
     main()
