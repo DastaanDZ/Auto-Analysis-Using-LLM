@@ -118,7 +118,7 @@ def rename_files_with_random_suffix():
             new_name = f"{os.path.splitext(file)[0]}_{random_suffix}.png"
             os.rename(file, new_name)
             print(f"Renamed: {file} -> {new_name}")
-        elif file.endswith(".md"):
+        elif file.endswith("README.md"):
             # Rename .md file
             new_name = f"{os.path.splitext(file)[0]}_{random_suffix}.md"
             os.rename(file, new_name)
