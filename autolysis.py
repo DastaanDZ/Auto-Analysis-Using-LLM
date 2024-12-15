@@ -50,7 +50,7 @@ def make_openai_request(data,filename):
     """Make a request to OpenAI API with caching."""
 
     url = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
-    token = os.environ.get("AIPROXY_TOKEN")
+    token = os.environ["AIPROXY_TOKEN"]
     if not token:
         raise EnvironmentError("AIPROXY_TOKEN environment variable is not set.")
 
@@ -103,31 +103,26 @@ def load_data(filename):
             continue
     raise RuntimeError(f"Error loading {filename}: Unable to decode file with tried encodings.")
 
-def organize_files_into_folder(folder_name):
+def rename_files_with_suffix(filename):
     """
-    Move all .png and .md files in the current directory into a specified folder.
+    Renames all .png and .md files in the current directory to append '_filename' before the extension.
 
-    Parameters:
-    folder_name (str): Name of the folder to create and move files into.
+    Args:
+        filename (str): The suffix to append to file names.
     """
-    current_dir = os.getcwd()  # Get the current directory
-    target_dir = os.path.join(current_dir, folder_name)
-
-    # Create the target folder if it doesn't exist
-    os.makedirs(target_dir, exist_ok=True)
-
     # List all files in the current directory
-    files_to_move = [file for file in os.listdir(current_dir) if file.endswith(('.png', '.md'))]
+    for file in os.listdir("."):
+        if file.endswith(".png"):
+            # Rename .png file
+            new_name = f"{os.path.splitext(file)[0]}_{filename}.png"
+            os.rename(file, new_name)
+            print(f"Renamed: {file} -> {new_name}")
+        elif file.endswith(".md"):
+            # Rename .md file
+            new_name = f"{os.path.splitext(file)[0]}_{filename}.md"
+            os.rename(file, new_name)
+            print(f"Renamed: {file} -> {new_name}")
 
-    # Move each file to the target directory
-    for file in files_to_move:
-        src_path = os.path.join(current_dir, file)
-        dest_path = os.path.join(target_dir, file)
-        shutil.move(src_path, dest_path)
-        print(f"Moved: {file} -> {folder_name}")
-
-    if not files_to_move:
-        print("No .png or .md files found to move.")
 
 def basic_analysis(df):
     """Perform basic analysis on the dataset."""
@@ -179,6 +174,7 @@ def ask_llm_for_columns_and_visualizations(df,filename):
         "columns": ["col1", "col2", "col3"],
         "visualizations": ["code_for_visualization_1", "code_for_visualization_2"]
     }}
+    The name of the dataset is dataset.csv
     """
     cache_key = hash_request(prompt,filename)
     
@@ -191,7 +187,7 @@ def ask_llm_for_columns_and_visualizations(df,filename):
         # print(json.loads(content))
         return json.loads(content)
 
-    token = os.getenv("AIPROXY_TOKEN")
+    token = os.environ["AIPROXY_TOKEN"]
     if not token:
         raise EnvironmentError("AIPROXY_TOKEN environment variable is not set.")
     
@@ -257,7 +253,7 @@ def generate_visualizations(df, filename):
     # Apply the code for each visualization
     for code in visualization_code_list:
         # Replace placeholder filename with the actual filename
-        updated_code = code.replace('your_dataset.csv', filename)
+        updated_code = code.replace('dataset.csv', filename)
         print(f"Executing visualization code: {updated_code}")
         
         try:
@@ -333,7 +329,7 @@ def main():
     generate_visualizations(df, args.filename)
     markdown = narrate_story(summary, insights, args.filename)
     save_outputs(markdown)
-    organize_files_into_folder(args.filename[:-4])
+    rename_files_with_suffix(args.filename[:-4])
 
 if __name__ == "__main__":
     main()
