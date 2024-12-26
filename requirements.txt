@@ -5,3 +5,4 @@ requests
 uv
 tabulate
 random
+re

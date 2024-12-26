@@ -10,6 +10,7 @@ import re
 import base64
 import shutil
 import random
+import re
 
 CACHE_FILE = "api_cache.json"
 
@@ -106,20 +107,22 @@ def load_data(filename):
 
 def rename_files_with_random_suffix():
     """
-    Renames all .png and .md files in the current directory to append a random 5-digit integer before the extension.
+    Renames all .png and README.md files in the current directory by appending a random 5-digit integer
+    before the extension, for .png files that have characters followed by a lowercase letter before the extension.
     """
     # Generate a random 5-digit integer
     random_suffix = random.randint(10000, 99999)
 
     # List all files in the current directory
     for file in os.listdir("."):
-        if file.endswith(".png"):
+        # Check if file ends with .png and the part before .png matches the pattern
+        if re.search(r'.+[a-z]\.png$', file):
             # Rename .png file
             new_name = f"{os.path.splitext(file)[0]}_{random_suffix}.png"
             os.rename(file, new_name)
             print(f"Renamed: {file} -> {new_name}")
-        elif file.endswith("README.md"):
-            # Rename .md file
+        elif file == "README.md":
+            # Rename README.md file
             new_name = f"{os.path.splitext(file)[0]}_{random_suffix}.md"
             os.rename(file, new_name)
             print(f"Renamed: {file} -> {new_name}")
